@@ -15,6 +15,8 @@ export default function MyApp({ Component, pageProps }: AppProps) {
             <a href="/woningen/kaart">Kaart</a>
             <a href="/vitacheck">VitaCheck</a>
             <a href="/voor-naasten">Voor naasten</a>
+            <a href="/voor-aanbieders">Voor aanbieders</a>
+            <a href="/vitadomus">VitaDomus</a>            
           </nav>
         </div>
       </header>
