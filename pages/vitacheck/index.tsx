@@ -10,6 +10,9 @@ import { useMemo, useState } from "react";
 
 type NeedLevel = "geen" | "licht" | "regelmatig" | "intensief";
 
+type FundingRoute = "onbekend" | "zelf" | "wmo" | "zvw" | "wlz";
+const [funding, setFunding] = useState<FundingRoute>("onbekend");
+
 type Domain =
   | "WEL_SOCIAAL"
   | "WEL_ACTIEF"
@@ -380,6 +383,34 @@ export default function VitaCheck() {
               >
                 Gebruik slimme startinstellingen
               </button>
+
+              <div style={{ marginTop: 14 }}>
+                <div style={{ fontSize: 13, color: "#666" }}>Heeft u een indicatie of financieringsroute (als u dit weet)?</div>
+                <select
+                  value={funding}
+                  onChange={(e) => setFunding(e.target.value as any)}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 12, border: "1px solid #ddd" }}
+                >
+                  <option value="onbekend">Ik weet het (nog) niet</option>
+                  <option value="zelf">Geen indicatie (zelf / particulier geregeld)</option>
+                  <option value="wmo">Wmo (gemeente)</option>
+                  <option value="zvw">Zvw (zorgverzekering / wijkverpleging)</option>
+                  <option value="wlz">Wlz (zwaardere/structurele zorg)</option>
+                </select>
+
+                <div style={{ marginTop: 10 }} className="card">
+                  <strong>Wat betekent dit in het kort?</strong>
+                  <p className="muted" style={{ marginTop: 8, lineHeight: 1.6 }}>
+                    Dit is alleen een richtingwijzer. Regels verschillen per gemeente en situatie.
+                  </p>
+                  <ul style={{ lineHeight: 1.8, marginTop: 8 }}>
+                    <li><strong>Wmo</strong>: hulp/ondersteuning via de gemeente (bijv. begeleiding, ondersteuning thuis).</li>
+                    <li><strong>Zvw</strong>: zorg via de zorgverzekering (bijv. wijkverpleging, persoonlijke verzorging/verpleging).</li>
+                    <li><strong>Wlz</strong>: langdurige, intensievere zorg (meer structurele/continue zorgbehoefte).</li>
+                    <li><strong>Geen indicatie</strong>: vaak praktisch startpunt (wonen + welzijn + hulp te organiseren).</li>
+                  </ul>
+                </div>
+              </div>
 
               <div style={{ marginTop: 10, fontSize: 12, color: "#666", lineHeight: 1.5 }}>
                 Tip: dit zet een paar logische keuzes klaar. U kunt alles aanpassen.
