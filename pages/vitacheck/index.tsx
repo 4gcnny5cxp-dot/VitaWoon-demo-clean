@@ -1,16 +1,30 @@
 import { useMemo, useState } from "react";
 
-/* =======================
-   Types & data
-======================= */
+/**
+ * VitaCheck (demo)
+ * - Nu + Later (verwachting/wens)
+ * - Domeinen: Welzijn & community, Hulp, Ondersteuning, Zorg
+ * - Indicatie/financieringsroute (richtingwijzer)
+ * - Resultaten: matchscore + "waarom dit past" + kaartlink
+ * - Geen match: "houd mij op de hoogte" (via /api/notify)
+ */
 
 type NeedLevel = "geen" | "licht" | "regelmatig" | "intensief";
+type FundingRoute = "onbekend" | "zelf" | "wmo" | "zvw" | "wlz";
 
 type Domain =
-  | "WELZIJN"
-  | "HULP"
-  | "ONDERSTEUNING"
-  | "ZORG";
+  | "WEL_SOCIAAL"
+  | "WEL_ACTIEF"
+  | "WEL_VEILIGHEID"
+  | "HULP_HUISHOUDEN"
+  | "HULP_MAALTIJDEN"
+  | "HULP_VERVOER"
+  | "ONDER_STRUCTUUR"
+  | "ONDER_BEGELEIDING"
+  | "ONDER_REABLEMENT"
+  | "ZORG_PV"
+  | "ZORG_VERPLEGING"
+  | "ZORG_24_7_NABIJ";
 
 type Listing = {
   id: string;
@@ -18,7 +32,11 @@ type Listing = {
   place: string;
   label: "Huur" | "Koop" | "Nieuwbouw" | "Concept";
   price: string;
-  capabilities: Record<Domain, NeedLevel>;
+  lat: number;
+  lon: number;
+
+  // capabilities = hoe goed een woonvorm dit kan faciliteren/organiseren (demo-inschatting)
+  capabilities: Partial<Record<Domain, NeedLevel>>;
 };
 
 const LEVEL_SCORE: Record<NeedLevel, number> = {
@@ -28,18 +46,67 @@ const LEVEL_SCORE: Record<NeedLevel, number> = {
   intensief: 3,
 };
 
+function levelLabel(l: NeedLevel) {
+  switch (l) {
+    case "geen":
+      return "n.v.t.";
+    case "licht":
+      return "licht";
+    case "regelmatig":
+      return "regelmatig";
+    case "intensief":
+      return "intensief";
+  }
+}
+
+function humanDomain(k: Domain) {
+  switch (k) {
+    case "WEL_SOCIAAL":
+      return "welzijn & ontmoeting";
+    case "WEL_ACTIEF":
+      return "activiteiten & vitaliteit";
+    case "WEL_VEILIGHEID":
+      return "veiligheid & vertrouwdheid";
+    case "HULP_HUISHOUDEN":
+      return "huishoudelijke hulp";
+    case "HULP_MAALTIJDEN":
+      return "maaltijden";
+    case "HULP_VERVOER":
+      return "vervoer";
+    case "ONDER_STRUCTUUR":
+      return "structuur & daginvulling";
+    case "ONDER_BEGELEIDING":
+      return "begeleiding";
+    case "ONDER_REABLEMENT":
+      return "reablement / fit blijven";
+    case "ZORG_PV":
+      return "persoonlijke verzorging";
+    case "ZORG_VERPLEGING":
+      return "verpleging";
+    case "ZORG_24_7_NABIJ":
+      return "24/7 nabijheid";
+    default:
+      return "onderdeel";
+  }
+}
+
+// Demo dataset (consistent met kaart)
 const LISTINGS: Listing[] = [
   {
     id: "vw-1",
-    title: "Seniorenappartement met lift",
+    title: "Licht appartement met lift",
     place: "Amsterdam",
     label: "Huur",
     price: "€ 1.450 p/m",
+    lat: 52.3676,
+    lon: 4.9041,
     capabilities: {
-      WELZIJN: "regelmatig",
-      HULP: "regelmatig",
-      ONDERSTEUNING: "licht",
-      ZORG: "licht",
+      WEL_SOCIAAL: "licht",
+      WEL_VEILIGHEID: "licht",
+      HULP_HUISHOUDEN: "regelmatig",
+      HULP_MAALTIJDEN: "licht",
+      ONDER_STRUCTUUR: "licht",
+      ZORG_PV: "licht",
     },
   },
   {
@@ -48,11 +115,14 @@ const LISTINGS: Listing[] = [
     place: "Utrecht",
     label: "Koop",
     price: "€ 425.000 k.k.",
+    lat: 52.0907,
+    lon: 5.1214,
     capabilities: {
-      WELZIJN: "licht",
-      HULP: "licht",
-      ONDERSTEUNING: "licht",
-      ZORG: "geen",
+      WEL_VEILIGHEID: "licht",
+      HULP_HUISHOUDEN: "licht",
+      HULP_VERVOER: "licht",
+      ONDER_REABLEMENT: "licht",
+      ZORG_PV: "licht",
     },
   },
   {
@@ -60,69 +130,234 @@ const LISTINGS: Listing[] = [
     title: "Serviceflat met ontmoetingsruimte",
     place: "Haarlem",
     label: "Nieuwbouw",
-    price: "n.v.t.",
+    price: "n.v.t. (demo)",
+    lat: 52.3874,
+    lon: 4.6462,
     capabilities: {
-      WELZIJN: "intensief",
-      HULP: "regelmatig",
-      ONDERSTEUNING: "regelmatig",
-      ZORG: "regelmatig",
+      WEL_SOCIAAL: "intensief",
+      WEL_ACTIEF: "regelmatig",
+      WEL_VEILIGHEID: "regelmatig",
+      HULP_MAALTIJDEN: "regelmatig",
+      HULP_HUISHOUDEN: "regelmatig",
+      ONDER_BEGELEIDING: "licht",
+      ONDER_STRUCTUUR: "licht",
+      ZORG_PV: "regelmatig",
+      ZORG_VERPLEGING: "licht",
+    },
+  },
+  {
+    id: "vw-4",
+    title: "Seniorenappartement met binnentuin",
+    place: "Amstelveen",
+    label: "Huur",
+    price: "€ 1.650 p/m",
+    lat: 52.308,
+    lon: 4.8746,
+    capabilities: {
+      WEL_SOCIAAL: "regelmatig",
+      WEL_VEILIGHEID: "regelmatig",
+      HULP_HUISHOUDEN: "regelmatig",
+      ONDER_REABLEMENT: "licht",
+      ZORG_PV: "licht",
+    },
+  },
+  {
+    id: "vw-5",
+    title: "Geclusterd wonen (concept)",
+    place: "Uithoorn",
+    label: "Concept",
+    price: "n.v.t. (concept)",
+    lat: 52.237,
+    lon: 4.8256,
+    capabilities: {
+      WEL_SOCIAAL: "intensief",
+      WEL_ACTIEF: "regelmatig",
+      WEL_VEILIGHEID: "licht",
+      HULP_MAALTIJDEN: "licht",
+      ONDER_STRUCTUUR: "regelmatig",
+      ONDER_BEGELEIDING: "licht",
+      ZORG_PV: "licht",
     },
   },
 ];
 
-/* =======================
-   Helpers
-======================= */
+const DOMAIN_GROUPS: Array<{
+  title: string;
+  subtitle: string;
+  items: Array<{ key: Domain; label: string; help: string }>;
+}> = [
+  {
+    title: "Welzijn & community",
+    subtitle: "Ontmoeting, omkijken, activiteiten, vitaliteit en veiligheid.",
+    items: [
+      {
+        key: "WEL_SOCIAAL",
+        label: "Ontmoeting & sociaal contact",
+        help: "Contact, gezamenlijke ruimtes, omkijken.",
+      },
+      {
+        key: "WEL_ACTIEF",
+        label: "Activiteiten & vitaliteit",
+        help: "Bewegen, activiteiten, reablement/gym.",
+      },
+      {
+        key: "WEL_VEILIGHEID",
+        label: "Veiligheid & vertrouwdheid",
+        help: "Overzicht, sociaal veilig, vertrouwde omgeving.",
+      },
+    ],
+  },
+  {
+    title: "Hulp",
+    subtitle: "Praktische hulp om het dagelijks leven makkelijker te maken.",
+    items: [
+      {
+        key: "HULP_HUISHOUDEN",
+        label: "Huishoudelijke hulp",
+        help: "Schoonmaak, wassen, lichte taken.",
+      },
+      {
+        key: "HULP_MAALTIJDEN",
+        label: "Maaltijden",
+        help: "Maaltijdservice, samen eten, bezorging.",
+      },
+      {
+        key: "HULP_VERVOER",
+        label: "Vervoer & mobiliteit",
+        help: "Halen/brengen, OV-hulp, deelvervoer.",
+      },
+    ],
+  },
+  {
+    title: "Ondersteuning",
+    subtitle: "Begeleiding, structuur, activering (zonder medische zorg als vertrekpunt).",
+    items: [
+      {
+        key: "ONDER_STRUCTUUR",
+        label: "Structuur & daginvulling",
+        help: "Ritme, planning, houvast.",
+      },
+      {
+        key: "ONDER_BEGELEIDING",
+        label: "Begeleiding",
+        help: "Lichte begeleiding, overzicht/prikkels, mantelzorg-ontlasting.",
+      },
+      {
+        key: "ONDER_REABLEMENT",
+        label: "Reablement / fit blijven",
+        help: "Oefenen, sterker worden, langer zelfstandig.",
+      },
+    ],
+  },
+  {
+    title: "Zorg",
+    subtitle: "Verzorging/verpleging (nu of later) – zo nodig met indicatie.",
+    items: [
+      {
+        key: "ZORG_PV",
+        label: "Persoonlijke verzorging",
+        help: "Hulp bij wassen/aankleden (wijkverpleging e.d.).",
+      },
+      {
+        key: "ZORG_VERPLEGING",
+        label: "Verpleging",
+        help: "Medische zorgmomenten, wondzorg, medicatie.",
+      },
+      {
+        key: "ZORG_24_7_NABIJ",
+        label: "24/7 nabijheid",
+        help: "Zorg dichtbij/aanwezigheid (zwaardere behoefte).",
+      },
+    ],
+  },
+];
 
-function levelLabel(l: NeedLevel) {
-  switch (l) {
-    case "geen":
-      return "Niet nodig";
-    case "licht":
-      return "Licht";
-    case "regelmatig":
-      return "Regelmatig";
-    case "intensief":
-      return "Intensief";
-  }
-}
-
-function scoreListing(
-  listing: Listing,
-  needs: Partial<Record<Domain, NeedLevel>>
-) {
+function scoreListing(listing: Listing, wants: Partial<Record<Domain, NeedLevel>>) {
   let score = 0;
+  let penalties = 0;
 
-  (Object.keys(needs) as Domain[]).forEach((k) => {
-    const need = needs[k] || "geen";
+  (Object.keys(wants) as Domain[]).forEach((k) => {
+    const need = wants[k] || "geen";
+    if (need === "geen") return;
+
     const cap = listing.capabilities[k] || "geen";
+    const n = LEVEL_SCORE[need];
+    const c = LEVEL_SCORE[cap];
 
-    if (LEVEL_SCORE[cap] >= LEVEL_SCORE[need]) {
-      score += 2;
+    if (c >= n) {
+      score += 3;
+      if (c > n) score += 1; // buffer
+    } else {
+      penalties += (n - c) * 2;
     }
   });
 
-  return score;
+  return { score: Math.max(score - penalties, 0), penalties };
 }
 
-/* =======================
-   Component
-======================= */
+function explainWhy(listing: Listing, wants: Partial<Record<Domain, NeedLevel>>) {
+  const positives: string[] = [];
+  const gaps: string[] = [];
+
+  (Object.keys(wants) as Domain[]).forEach((k) => {
+    const need = wants[k] || "geen";
+    if (need === "geen") return;
+
+    const cap = listing.capabilities[k] || "geen";
+    const n = LEVEL_SCORE[need];
+    const c = LEVEL_SCORE[cap];
+
+    const label = humanDomain(k);
+
+    if (c >= n) positives.push(label);
+    else gaps.push(label);
+  });
+
+  const pos = positives.slice(0, 3);
+  const gap = gaps.slice(0, 2);
+
+  let s = "";
+  if (pos.length) s += `Sterk op: ${pos.join(", ")}. `;
+  if (gap.length) s += `Mogelijk aandachtspunt: ${gap.join(", ")}. `;
+  if (!pos.length && !gap.length) s += "Match vooral op locatie/type (demo).";
+
+  return s.trim();
+}
+
+function fundingText(route: FundingRoute) {
+  switch (route) {
+    case "wmo":
+      return "Wmo: hulp/ondersteuning via de gemeente (bijv. begeleiding, ondersteuning thuis).";
+    case "zvw":
+      return "Zvw: zorg via de zorgverzekering (bijv. wijkverpleging: verzorging/verpleging).";
+    case "wlz":
+      return "Wlz: langdurige, intensievere zorg (structurele/continue zorgbehoefte).";
+    case "zelf":
+      return "Geen indicatie: vaak start bij wonen & welzijn, met hulp te organiseren.";
+    default:
+      return "Onbekend: geen probleem — VitaCheck helpt eerst oriënteren en taal geven.";
+  }
+}
 
 export default function VitaCheck() {
-  const [current, setCurrent] = useState<
-    "zelfstandig" | "hulp" | "ondersteuning" | "zorg" | "naaste"
-  >("zelfstandig");
+  const [current, setCurrent] = useState<"zelfstandig" | "lichteHulp" | "ondersteuning" | "zorg" | "naaste">(
+    "zelfstandig"
+  );
+  const [funding, setFunding] = useState<FundingRoute>("onbekend");
+
+  const [area, setArea] = useState("");
+  const [type, setType] = useState<"all" | "Huur" | "Koop" | "Nieuwbouw" | "Concept">("all");
 
   const [now, setNow] = useState<Partial<Record<Domain, NeedLevel>>>({});
   const [later, setLater] = useState<Partial<Record<Domain, NeedLevel>>>({});
+
   const [submitted, setSubmitted] = useState(false);
 
-  function setLevel(
-    target: "now" | "later",
-    key: Domain,
-    level: NeedLevel
-  ) {
+  const [email, setEmail] = useState("");
+  const [notifyDone, setNotifyDone] = useState(false);
+  const [notifyError, setNotifyError] = useState<string | null>(null);
+
+  function setLevel(target: "now" | "later", key: Domain, level: NeedLevel) {
     const setter = target === "now" ? setNow : setLater;
     const state = target === "now" ? now : later;
 
@@ -133,159 +368,425 @@ export default function VitaCheck() {
     setter(next);
   }
 
-  const combinedNeeds = useMemo(() => {
+  function levelOf(target: "now" | "later", key: Domain): NeedLevel {
+    const state = target === "now" ? now : later;
+    return state[key] || "geen";
+  }
+
+  function applySuggestedDefaults() {
+    const baseNow: Partial<Record<Domain, NeedLevel>> = {};
+    const baseLater: Partial<Record<Domain, NeedLevel>> = {};
+
+    // basis: welzijn is bijna altijd relevant
+    baseNow.WEL_SOCIAAL = "licht";
+    baseNow.WEL_VEILIGHEID = "licht";
+
+    if (current === "zelfstandig" || current === "naaste") {
+      baseLater.HULP_HUISHOUDEN = "licht";
+      baseLater.ONDER_REABLEMENT = "licht";
+      baseLater.WEL_ACTIEF = "licht";
+    }
+    if (current === "lichteHulp") {
+      baseNow.HULP_HUISHOUDEN = "licht";
+      baseLater.HULP_MAALTIJDEN = "licht";
+      baseLater.ONDER_STRUCTUUR = "licht";
+    }
+    if (current === "ondersteuning") {
+      baseNow.ONDER_STRUCTUUR = "regelmatig";
+      baseNow.ONDER_BEGELEIDING = "licht";
+      baseLater.HULP_HUISHOUDEN = "licht";
+      baseLater.ZORG_PV = "licht";
+    }
+    if (current === "zorg") {
+      baseNow.ZORG_PV = "regelmatig";
+      baseNow.WEL_VEILIGHEID = "regelmatig";
+      baseLater.ZORG_VERPLEGING = "licht";
+      baseLater.ZORG_24_7_NABIJ = "licht";
+    }
+
+    setNow(baseNow);
+    setLater(baseLater);
+  }
+
+  const wantsCombined = useMemo(() => {
     const out: Partial<Record<Domain, NeedLevel>> = {};
-    (["WELZIJN", "HULP", "ONDERSTEUNING", "ZORG"] as Domain[]).forEach(
-      (k) => {
-        const n = now[k] || "geen";
-        const l = later[k] || "geen";
-        out[k] =
-          LEVEL_SCORE[l] > LEVEL_SCORE[n] ? l : n;
-      }
-    );
+    const keys = new Set<Domain>([
+      ...(Object.keys(now) as Domain[]),
+      ...(Object.keys(later) as Domain[]),
+    ]);
+    keys.forEach((k) => {
+      const n = now[k] || "geen";
+      const l = later[k] || "geen";
+      out[k] = LEVEL_SCORE[l] > LEVEL_SCORE[n] ? l : n;
+    });
     return out;
   }, [now, later]);
 
   const results = useMemo(() => {
     if (!submitted) return [];
-    return LISTINGS.map((l) => ({
-      listing: l,
-      score: scoreListing(l, combinedNeeds),
-    })).sort((a, b) => b.score - a.score);
-  }, [submitted, combinedNeeds]);
+
+    const a = area.trim().toLowerCase();
+    const filtered = LISTINGS.filter((x) => {
+      if (a && !x.place.toLowerCase().includes(a)) return false;
+      if (type !== "all" && x.label !== type) return false;
+      return true;
+    });
+
+    return filtered
+      .map((x) => ({ listing: x, ...scoreListing(x, wantsCombined) }))
+      .sort((p, q) => q.score - p.score);
+  }, [submitted, area, type, wantsCombined]);
+
+  const top = results[0]?.listing;
+
+  function focusUrl() {
+    const first = top || LISTINGS[0];
+    return `/woningen/kaart?focus=${encodeURIComponent(first.id)}`;
+  }
+
+  async function submitNotify() {
+    setNotifyDone(false);
+    setNotifyError(null);
+
+    try {
+      const res = await fetch("/api/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          current,
+          funding,
+          area,
+          type,
+          now,
+          later,
+        }),
+      });
+
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(t || "Fout bij opslaan");
+      }
+
+      setNotifyDone(true);
+    } catch (e: any) {
+      setNotifyError(e?.message || "Er ging iets mis");
+    }
+  }
 
   return (
     <main>
       <div className="container">
         <h1>VitaCheck</h1>
-        <p className="muted">
-          Geef aan wat u <strong>nu</strong> heeft en wat u{" "}
-          <strong>later</strong> wilt kunnen organiseren.
+        <p className="muted" style={{ maxWidth: 900 }}>
+          Geef aan wat u <strong>nu</strong> heeft en wat u <strong>later</strong> wilt kunnen organiseren.
+          Wonen en welzijn blijven centraal. Hulp, ondersteuning en zorg zijn beschikbaar wanneer dat nodig is.
         </p>
 
-        <div className="card">
-          <label>Huidige situatie</label>
-          <select
-            value={current}
-            onChange={(e) =>
-              setCurrent(e.target.value as any)
-            }
-          >
-            <option value="zelfstandig">
-              Ik woon zelfstandig
-            </option>
-            <option value="hulp">
-              Ik ontvang hulp
-            </option>
-            <option value="ondersteuning">
-              Ik ontvang ondersteuning
-            </option>
-            <option value="zorg">
-              Ik ontvang zorg / indicatie
-            </option>
-            <option value="naaste">
-              Ik ben een naaste
-            </option>
-          </select>
+        <div className="card" style={{ marginTop: 14 }}>
+          <div style={{ display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr" }}>
+            <div>
+              <div style={{ fontSize: 13, color: "#666" }}>Huidige situatie</div>
+              <select
+                value={current}
+                onChange={(e) => setCurrent(e.target.value as any)}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 12, border: "1px solid #ddd" }}
+              >
+                <option value="zelfstandig">Ik woon zelfstandig (geen hulp)</option>
+                <option value="lichteHulp">Ik ontvang lichte hulp (praktisch)</option>
+                <option value="ondersteuning">Ik ontvang ondersteuning / begeleiding</option>
+                <option value="zorg">Ik ontvang zorg / heb een indicatie (nu of binnenkort)</option>
+                <option value="naaste">Ik ben naaste en zoek mee</option>
+              </select>
 
-          <h3>Wat heeft u nu?</h3>
-          {(["WELZIJN", "HULP", "ONDERSTEUNING", "ZORG"] as Domain[]).map(
-            (d) => (
-              <DomainRow
-                key={d}
-                domain={d}
-                value={now[d] || "geen"}
-                onChange={(v) =>
-                  setLevel("now", d, v)
-                }
+              <div style={{ marginTop: 12, fontSize: 13, color: "#666" }}>Indicatie / financieringsroute (als u dit weet)</div>
+              <select
+                value={funding}
+                onChange={(e) => setFunding(e.target.value as any)}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 12, border: "1px solid #ddd" }}
+              >
+                <option value="onbekend">Ik weet het (nog) niet</option>
+                <option value="zelf">Geen indicatie (zelf / particulier geregeld)</option>
+                <option value="wmo">Wmo (gemeente)</option>
+                <option value="zvw">Zvw (zorgverzekering / wijkverpleging)</option>
+                <option value="wlz">Wlz (langdurige/structurele zorg)</option>
+              </select>
+
+              <div className="card" style={{ marginTop: 10, background: "#fafafa" }}>
+                <strong>Richtingwijzer</strong>
+                <p className="muted" style={{ marginTop: 8, lineHeight: 1.6 }}>
+                  {fundingText(funding)}
+                </p>
+                <div style={{ fontSize: 12, color: "#666" }}>
+                  NB: dit is informatief; regels verschillen per gemeente en situatie.
+                </div>
+              </div>
+
+              <button
+                onClick={applySuggestedDefaults}
+                style={{
+                  marginTop: 10,
+                  padding: "10px 14px",
+                  borderRadius: 999,
+                  border: "1px solid #111",
+                  background: "#fff",
+                  fontWeight: 800,
+                  cursor: "pointer",
+                }}
+              >
+                Gebruik slimme startinstellingen
+              </button>
+
+              <div style={{ marginTop: 10, fontSize: 12, color: "#666", lineHeight: 1.5 }}>
+                Tip: dit zet logische keuzes klaar. U kunt alles aanpassen.
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 13, color: "#666" }}>Plaats/regio</div>
+              <input
+                value={area}
+                onChange={(e) => setArea(e.target.value)}
+                placeholder="Bijv. Amsterdam, Utrecht…"
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 12, border: "1px solid #ddd" }}
               />
-            )
-          )}
 
-          <h3>Wat wilt u later kunnen organiseren?</h3>
-          {(["WELZIJN", "HULP", "ONDERSTEUNING", "ZORG"] as Domain[]).map(
-            (d) => (
-              <DomainRow
-                key={d}
-                domain={d}
-                value={later[d] || "geen"}
-                onChange={(v) =>
-                  setLevel("later", d, v)
-                }
-              />
-            )
-          )}
+              <div style={{ fontSize: 13, color: "#666", marginTop: 12 }}>Type</div>
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value as any)}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 12, border: "1px solid #ddd" }}
+              >
+                <option value="all">Alles</option>
+                <option value="Huur">Huur</option>
+                <option value="Koop">Koop</option>
+                <option value="Nieuwbouw">Nieuwbouw</option>
+                <option value="Concept">Concept</option>
+              </select>
 
-          <button
-            className="btn btnPrimary"
-            onClick={() => setSubmitted(true)}
-          >
-            Toon passend aanbod
-          </button>
+              <div className="card" style={{ marginTop: 16 }}>
+                <strong>Definities (kort)</strong>
+                <ul style={{ lineHeight: 1.8, marginTop: 10 }}>
+                  <li>
+                    <strong>Welzijn & community</strong>: ontmoeting, activiteiten, omkijken, veiligheid.
+                  </li>
+                  <li>
+                    <strong>Hulp</strong>: praktisch (huishouden, maaltijden, vervoer).
+                  </li>
+                  <li>
+                    <strong>Ondersteuning</strong>: begeleiding, structuur, reablement/fit blijven.
+                  </li>
+                  <li>
+                    <strong>Zorg</strong>: persoonlijke verzorging/verpleging, eventueel met indicatie.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <hr style={{ margin: "18px 0" }} />
+
+          <div style={{ display: "grid", gap: 14, gridTemplateColumns: "1fr 1fr" }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: 18 }}>Wat heeft u nu?</h2>
+              <p className="muted" style={{ marginTop: 6 }}>
+                Kies per onderwerp het niveau dat nu speelt.
+              </p>
+
+              {DOMAIN_GROUPS.map((g) => (
+                <DomainBlock
+                  key={g.title}
+                  title={g.title}
+                  subtitle={g.subtitle}
+                  items={g.items}
+                  target="now"
+                  levelOf={(k) => levelOf("now", k)}
+                  setLevel={(k, v) => setLevel("now", k, v)}
+                />
+              ))}
+            </div>
+
+            <div>
+              <h2 style={{ margin: 0, fontSize: 18 }}>Wat wilt u later kunnen organiseren?</h2>
+              <p className="muted" style={{ marginTop: 6 }}>
+                Dit is de “zekerheid voor later” — zonder dat het nu al moet.
+              </p>
+
+              {DOMAIN_GROUPS.map((g) => (
+                <DomainBlock
+                  key={g.title}
+                  title={g.title}
+                  subtitle={g.subtitle}
+                  items={g.items}
+                  target="later"
+                  levelOf={(k) => levelOf("later", k)}
+                  setLevel={(k, v) => setLevel("later", k, v)}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="btnRow" style={{ marginTop: 16 }}>
+            <button
+              onClick={() => {
+                setSubmitted(true);
+                setNotifyDone(false);
+                setNotifyError(null);
+              }}
+              className="btn btnPrimary"
+              style={{ cursor: "pointer" }}
+            >
+              Toon actueel aanbod
+            </button>
+
+            <a className="btn btnGhost" href={focusUrl()}>
+              Bekijk op kaart →
+            </a>
+          </div>
         </div>
 
         {submitted && (
-          <div style={{ marginTop: 24 }}>
-            <h2>Resultaat</h2>
-            {results.map(({ listing, score }) => (
-              <div key={listing.id} className="card">
-                <strong>{listing.title}</strong>
-                <div className="muted">
-                  {listing.place} • {listing.label}
-                </div>
-                <div>{listing.price}</div>
-                <div>
-                  Matchscore: <strong>{score}</strong>
-                </div>
-                <a href={`/woningen/${listing.id}`}>
-                  Bekijk woning →
-                </a>
+          <div style={{ marginTop: 18 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+              <h2 style={{ margin: 0 }}>Resultaat</h2>
+              <a href={focusUrl()} style={{ textDecoration: "underline" }}>
+                Kaart →
+              </a>
+            </div>
+
+            {results.length > 0 && results[0].score > 0 ? (
+              <div style={{ display: "grid", gap: 14, marginTop: 14 }}>
+                {results.slice(0, 8).map(({ listing, score, penalties }) => (
+                  <a
+                    key={listing.id}
+                    href={`/woningen/${encodeURIComponent(listing.id)}`}
+                    className="card"
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                      <div>
+                        <div style={{ fontSize: 13, color: "#666" }}>
+                          {listing.place} • {listing.label}
+                        </div>
+                        <div style={{ fontWeight: 800, marginTop: 4 }}>{listing.title}</div>
+                        <div style={{ marginTop: 6, color: "#444" }}>{listing.price}</div>
+                      </div>
+
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 12, color: "#666" }}>Matchscore</div>
+                        <div style={{ fontWeight: 800 }}>{score}</div>
+                        {penalties > 0 && <div style={{ fontSize: 12, color: "#b00", marginTop: 4 }}>Let op: enkele tekorten</div>}
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: 10, fontSize: 13, color: "#444", lineHeight: 1.5 }}>
+                      <strong>Waarom dit past:</strong> {explainWhy(listing, wantsCombined)}
+                    </div>
+
+                    <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                      <a href={`/woningen/kaart?focus=${encodeURIComponent(listing.id)}`} style={{ textDecoration: "underline" }}>
+                        Toon op kaart →
+                      </a>
+                    </div>
+                  </a>
+                ))}
               </div>
-            ))}
+            ) : (
+              <div className="card" style={{ marginTop: 14 }}>
+                <div style={{ fontWeight: 800 }}>Geen passend aanbod gevonden (demo)</div>
+                <p className="muted" style={{ maxWidth: 820 }}>
+                  Laat uw e-mailadres achter. Dan houden we u op de hoogte zodra er passend aanbod beschikbaar is.
+                </p>
+
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                  <input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="E-mailadres"
+                    style={{ padding: "10px 12px", borderRadius: 12, border: "1px solid #ddd", minWidth: 260 }}
+                  />
+                  <button
+                    onClick={submitNotify}
+                    disabled={!email.includes("@")}
+                    className="btn btnPrimary"
+                    style={{ cursor: email.includes("@") ? "pointer" : "not-allowed", opacity: email.includes("@") ? 1 : 0.6 }}
+                  >
+                    Houd mij op de hoogte
+                  </button>
+                </div>
+
+                {notifyDone && <div style={{ marginTop: 10, fontSize: 13, color: "#0a7" }}>Dank! (demo) We hebben uw verzoek ontvangen.</div>}
+                {notifyError && <div style={{ marginTop: 10, fontSize: 13, color: "#b00" }}>{notifyError}</div>}
+
+                <div style={{ marginTop: 10, fontSize: 12, color: "#666" }}>
+                  In productie: koppeling met e-mail tooling + alerts op nieuw aanbod.
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         <p style={{ marginTop: 24 }}>
-          <a href="/">← Terug</a>
+          <a href="/" style={{ textDecoration: "underline" }}>
+            ← Terug
+          </a>
         </p>
       </div>
     </main>
   );
 }
 
-/* =======================
-   Subcomponent
-======================= */
-
-function DomainRow(props: {
-  domain: Domain;
-  value: NeedLevel;
-  onChange: (v: NeedLevel) => void;
+function DomainBlock(props: {
+  title: string;
+  subtitle: string;
+  items: Array<{ key: Domain; label: string; help: string }>;
+  target: "now" | "later";
+  levelOf: (k: Domain) => NeedLevel;
+  setLevel: (k: Domain, v: NeedLevel) => void;
 }) {
+  const { title, subtitle, items, target, levelOf, setLevel } = props;
+
   return (
-    <div style={{ marginBottom: 12 }}>
-      <strong>{props.domain}</strong>
-      <div style={{ display: "flex", gap: 8 }}>
-        {(["geen", "licht", "regelmatig", "intensief"] as NeedLevel[]).map(
-          (l) => (
-            <button
-              key={l}
-              onClick={() => props.onChange(l)}
-              style={{
-                padding: "6px 10px",
-                borderRadius: 20,
-                border: "1px solid #ccc",
-                background:
-                  props.value === l ? "#111" : "#fff",
-                color:
-                  props.value === l ? "#fff" : "#111",
-                cursor: "pointer",
-              }}
-            >
-              {levelLabel(l)}
-            </button>
-          )
-        )}
+    <div style={{ marginTop: 14, borderTop: "1px solid #eee", paddingTop: 12 }}>
+      <div style={{ fontWeight: 800 }}>{title}</div>
+      <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>{subtitle}</div>
+
+      <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
+        {items.map((it) => (
+          <div key={it.key} style={{ border: "1px solid #eee", borderRadius: 14, padding: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+              <div>
+                <div style={{ fontWeight: 700 }}>{it.label}</div>
+                <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>{it.help}</div>
+              </div>
+
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {(["geen", "licht", "regelmatig", "intensief"] as NeedLevel[]).map((lvl) => {
+                  const active = levelOf(it.key) === lvl;
+                  return (
+                    <button
+                      key={lvl}
+                      onClick={() => setLevel(it.key, lvl)}
+                      style={{
+                        padding: "8px 10px",
+                        borderRadius: 999,
+                        border: "1px solid #ddd",
+                        background: active ? "#111" : "#fff",
+                        color: active ? "#fff" : "#111",
+                        cursor: "pointer",
+                        fontWeight: 800,
+                        fontSize: 12,
+                      }}
+                      title={`${target === "now" ? "Nu" : "Later"}: ${levelLabel(lvl)}`}
+                    >
+                      {levelLabel(lvl)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
