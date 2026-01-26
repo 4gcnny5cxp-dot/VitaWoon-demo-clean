@@ -1,63 +1,22 @@
 import { useMemo, useState } from "react";
+import {
+  DOMAIN_GROUPS,
+} from "../../vitacheckParts"; // <-- we maken dit bestand in stap 1b
+import {
+  LEVEL_SCORE,
+  LISTINGS,
+  fundingText,
+  moveHorizonLabel,
+  type Domain,
+  type FundingRoute,
+  type MoveHorizon,
+  type NeedLevel,
+  type VitaProfile,
+} from "../../lib/demoData";
 
 /**
- * VitaCheck (demo)
- * - Nu + Later (verwachting/wens)
- * - Domeinen: Welzijn & community, Hulp, Ondersteuning, Zorg
- * - Indicatie/financieringsroute (richtingwijzer)
- * - Resultaten: matchscore + "waarom dit past" + kaartlink
- * - Geen match: "houd mij op de hoogte" (via /api/notify)
+ * We halen DOMAIN_GROUPS uit vitacheckParts.ts zodat dit bestand niet megagroot wordt.
  */
-
-type NeedLevel = "geen" | "licht" | "regelmatig" | "intensief";
-type FundingRoute = "onbekend" | "zelf" | "wmo" | "zvw" | "wlz";
-
-type Domain =
-  | "WEL_SOCIAAL"
-  | "WEL_ACTIEF"
-  | "WEL_VEILIGHEID"
-  | "HULP_HUISHOUDEN"
-  | "HULP_MAALTIJDEN"
-  | "HULP_VERVOER"
-  | "ONDER_STRUCTUUR"
-  | "ONDER_BEGELEIDING"
-  | "ONDER_REABLEMENT"
-  | "ZORG_PV"
-  | "ZORG_VERPLEGING"
-  | "ZORG_24_7_NABIJ";
-
-type Listing = {
-  id: string;
-  title: string;
-  place: string;
-  label: "Huur" | "Koop" | "Nieuwbouw" | "Concept";
-  price: string;
-  lat: number;
-  lon: number;
-
-  // capabilities = hoe goed een woonvorm dit kan faciliteren/organiseren (demo-inschatting)
-  capabilities: Partial<Record<Domain, NeedLevel>>;
-};
-
-const LEVEL_SCORE: Record<NeedLevel, number> = {
-  geen: 0,
-  licht: 1,
-  regelmatig: 2,
-  intensief: 3,
-};
-
-function levelLabel(l: NeedLevel) {
-  switch (l) {
-    case "geen":
-      return "n.v.t.";
-    case "licht":
-      return "licht";
-    case "regelmatig":
-      return "regelmatig";
-    case "intensief":
-      return "intensief";
-  }
-}
 
 function humanDomain(k: Domain) {
   switch (k) {
@@ -90,189 +49,20 @@ function humanDomain(k: Domain) {
   }
 }
 
-// Demo dataset (consistent met kaart)
-const LISTINGS: Listing[] = [
-  {
-    id: "vw-1",
-    title: "Licht appartement met lift",
-    place: "Amsterdam",
-    label: "Huur",
-    price: "€ 1.450 p/m",
-    lat: 52.3676,
-    lon: 4.9041,
-    capabilities: {
-      WEL_SOCIAAL: "licht",
-      WEL_VEILIGHEID: "licht",
-      HULP_HUISHOUDEN: "regelmatig",
-      HULP_MAALTIJDEN: "licht",
-      ONDER_STRUCTUUR: "licht",
-      ZORG_PV: "licht",
-    },
-  },
-  {
-    id: "vw-2",
-    title: "Gelijkvloers wonen nabij winkels",
-    place: "Utrecht",
-    label: "Koop",
-    price: "€ 425.000 k.k.",
-    lat: 52.0907,
-    lon: 5.1214,
-    capabilities: {
-      WEL_VEILIGHEID: "licht",
-      HULP_HUISHOUDEN: "licht",
-      HULP_VERVOER: "licht",
-      ONDER_REABLEMENT: "licht",
-      ZORG_PV: "licht",
-    },
-  },
-  {
-    id: "vw-3",
-    title: "Serviceflat met ontmoetingsruimte",
-    place: "Haarlem",
-    label: "Nieuwbouw",
-    price: "n.v.t. (demo)",
-    lat: 52.3874,
-    lon: 4.6462,
-    capabilities: {
-      WEL_SOCIAAL: "intensief",
-      WEL_ACTIEF: "regelmatig",
-      WEL_VEILIGHEID: "regelmatig",
-      HULP_MAALTIJDEN: "regelmatig",
-      HULP_HUISHOUDEN: "regelmatig",
-      ONDER_BEGELEIDING: "licht",
-      ONDER_STRUCTUUR: "licht",
-      ZORG_PV: "regelmatig",
-      ZORG_VERPLEGING: "licht",
-    },
-  },
-  {
-    id: "vw-4",
-    title: "Seniorenappartement met binnentuin",
-    place: "Amstelveen",
-    label: "Huur",
-    price: "€ 1.650 p/m",
-    lat: 52.308,
-    lon: 4.8746,
-    capabilities: {
-      WEL_SOCIAAL: "regelmatig",
-      WEL_VEILIGHEID: "regelmatig",
-      HULP_HUISHOUDEN: "regelmatig",
-      ONDER_REABLEMENT: "licht",
-      ZORG_PV: "licht",
-    },
-  },
-  {
-    id: "vw-5",
-    title: "Geclusterd wonen (concept)",
-    place: "Uithoorn",
-    label: "Concept",
-    price: "n.v.t. (concept)",
-    lat: 52.237,
-    lon: 4.8256,
-    capabilities: {
-      WEL_SOCIAAL: "intensief",
-      WEL_ACTIEF: "regelmatig",
-      WEL_VEILIGHEID: "licht",
-      HULP_MAALTIJDEN: "licht",
-      ONDER_STRUCTUUR: "regelmatig",
-      ONDER_BEGELEIDING: "licht",
-      ZORG_PV: "licht",
-    },
-  },
-];
+function levelLabel(l: NeedLevel) {
+  switch (l) {
+    case "geen":
+      return "n.v.t.";
+    case "licht":
+      return "licht";
+    case "regelmatig":
+      return "regelmatig";
+    case "intensief":
+      return "intensief";
+  }
+}
 
-const DOMAIN_GROUPS: Array<{
-  title: string;
-  subtitle: string;
-  items: Array<{ key: Domain; label: string; help: string }>;
-}> = [
-  {
-    title: "Welzijn & community",
-    subtitle: "Ontmoeting, omkijken, activiteiten, vitaliteit en veiligheid.",
-    items: [
-      {
-        key: "WEL_SOCIAAL",
-        label: "Ontmoeting & sociaal contact",
-        help: "Contact, gezamenlijke ruimtes, omkijken.",
-      },
-      {
-        key: "WEL_ACTIEF",
-        label: "Activiteiten & vitaliteit",
-        help: "Bewegen, activiteiten, reablement/gym.",
-      },
-      {
-        key: "WEL_VEILIGHEID",
-        label: "Veiligheid & vertrouwdheid",
-        help: "Overzicht, sociaal veilig, vertrouwde omgeving.",
-      },
-    ],
-  },
-  {
-    title: "Hulp",
-    subtitle: "Praktische hulp om het dagelijks leven makkelijker te maken.",
-    items: [
-      {
-        key: "HULP_HUISHOUDEN",
-        label: "Huishoudelijke hulp",
-        help: "Schoonmaak, wassen, lichte taken.",
-      },
-      {
-        key: "HULP_MAALTIJDEN",
-        label: "Maaltijden",
-        help: "Maaltijdservice, samen eten, bezorging.",
-      },
-      {
-        key: "HULP_VERVOER",
-        label: "Vervoer & mobiliteit",
-        help: "Halen/brengen, OV-hulp, deelvervoer.",
-      },
-    ],
-  },
-  {
-    title: "Ondersteuning",
-    subtitle: "Begeleiding, structuur, activering (zonder medische zorg als vertrekpunt).",
-    items: [
-      {
-        key: "ONDER_STRUCTUUR",
-        label: "Structuur & daginvulling",
-        help: "Ritme, planning, houvast.",
-      },
-      {
-        key: "ONDER_BEGELEIDING",
-        label: "Begeleiding",
-        help: "Lichte begeleiding, overzicht/prikkels, mantelzorg-ontlasting.",
-      },
-      {
-        key: "ONDER_REABLEMENT",
-        label: "Reablement / fit blijven",
-        help: "Oefenen, sterker worden, langer zelfstandig.",
-      },
-    ],
-  },
-  {
-    title: "Zorg",
-    subtitle: "Verzorging/verpleging (nu of later) – zo nodig met indicatie.",
-    items: [
-      {
-        key: "ZORG_PV",
-        label: "Persoonlijke verzorging",
-        help: "Hulp bij wassen/aankleden (wijkverpleging e.d.).",
-      },
-      {
-        key: "ZORG_VERPLEGING",
-        label: "Verpleging",
-        help: "Medische zorgmomenten, wondzorg, medicatie.",
-      },
-      {
-        key: "ZORG_24_7_NABIJ",
-        label: "24/7 nabijheid",
-        help: "Zorg dichtbij/aanwezigheid (zwaardere behoefte).",
-      },
-    ],
-  },
-];
-
-function scoreListing(listing: Listing, wants: Partial<Record<Domain, NeedLevel>>) {
+function scoreListing(listing: any, wants: Partial<Record<Domain, NeedLevel>>) {
   let score = 0;
   let penalties = 0;
 
@@ -286,7 +76,7 @@ function scoreListing(listing: Listing, wants: Partial<Record<Domain, NeedLevel>
 
     if (c >= n) {
       score += 3;
-      if (c > n) score += 1; // buffer
+      if (c > n) score += 1;
     } else {
       penalties += (n - c) * 2;
     }
@@ -295,7 +85,7 @@ function scoreListing(listing: Listing, wants: Partial<Record<Domain, NeedLevel>
   return { score: Math.max(score - penalties, 0), penalties };
 }
 
-function explainWhy(listing: Listing, wants: Partial<Record<Domain, NeedLevel>>) {
+function explainWhy(listing: any, wants: Partial<Record<Domain, NeedLevel>>) {
   const positives: string[] = [];
   const gaps: string[] = [];
 
@@ -324,33 +114,23 @@ function explainWhy(listing: Listing, wants: Partial<Record<Domain, NeedLevel>>)
   return s.trim();
 }
 
-function fundingText(route: FundingRoute) {
-  switch (route) {
-    case "wmo":
-      return "Wmo: hulp/ondersteuning via de gemeente (bijv. begeleiding, ondersteuning thuis).";
-    case "zvw":
-      return "Zvw: zorg via de zorgverzekering (bijv. wijkverpleging: verzorging/verpleging).";
-    case "wlz":
-      return "Wlz: langdurige, intensievere zorg (structurele/continue zorgbehoefte).";
-    case "zelf":
-      return "Geen indicatie: vaak start bij wonen & welzijn, met hulp te organiseren.";
-    default:
-      return "Onbekend: geen probleem — VitaCheck helpt eerst oriënteren en taal geven.";
-  }
-}
-
 export default function VitaCheck() {
-  const [current, setCurrent] = useState<"zelfstandig" | "lichteHulp" | "ondersteuning" | "zorg" | "naaste">(
-    "zelfstandig"
-  );
+  const [current, setCurrent] = useState<VitaProfile["current"]>("zelfstandig");
   const [funding, setFunding] = useState<FundingRoute>("onbekend");
+  const [moveHorizon, setMoveHorizon] = useState<MoveHorizon>("orientatie");
+
+  const [leavingTenure, setLeavingTenure] = useState<"koop" | "huur" | "onbekend">("onbekend");
+  const [leavingType, setLeavingType] = useState<"appartement" | "eengezins" | "seniorenwoning" | "overig" | "onbekend">("onbekend");
+  const [leavingFloor, setLeavingFloor] = useState<"begane_grond" | "verdieping_met_lift" | "verdieping_zonder_lift" | "onbekend">("onbekend");
+  const [leavingRegion, setLeavingRegion] = useState("");
+  const [leavingSize, setLeavingSize] = useState<"klein" | "middel" | "groot" | "onbekend">("onbekend");
+  const [leavingNotes, setLeavingNotes] = useState("");
 
   const [area, setArea] = useState("");
-  const [type, setType] = useState<"all" | "Huur" | "Koop" | "Nieuwbouw" | "Concept">("all");
+  const [type, setType] = useState<VitaProfile["type"]>("all");
 
-  const [now, setNow] = useState<Partial<Record<Domain, NeedLevel>>>({});
-  const [later, setLater] = useState<Partial<Record<Domain, NeedLevel>>>({});
-
+  const [now, setNow] = useState<VitaProfile["now"]>({});
+  const [later, setLater] = useState<VitaProfile["later"]>({});
   const [submitted, setSubmitted] = useState(false);
 
   const [email, setEmail] = useState("");
@@ -362,22 +142,21 @@ export default function VitaCheck() {
     const state = target === "now" ? now : later;
 
     const next = { ...state };
-    if (level === "geen") delete next[key];
-    else next[key] = level;
+    if (level === "geen") delete (next as any)[key];
+    else (next as any)[key] = level;
 
     setter(next);
   }
 
   function levelOf(target: "now" | "later", key: Domain): NeedLevel {
     const state = target === "now" ? now : later;
-    return state[key] || "geen";
+    return (state as any)[key] || "geen";
   }
 
   function applySuggestedDefaults() {
-    const baseNow: Partial<Record<Domain, NeedLevel>> = {};
-    const baseLater: Partial<Record<Domain, NeedLevel>> = {};
+    const baseNow: any = {};
+    const baseLater: any = {};
 
-    // basis: welzijn is bijna altijd relevant
     baseNow.WEL_SOCIAAL = "licht";
     baseNow.WEL_VEILIGHEID = "licht";
 
@@ -415,12 +194,47 @@ export default function VitaCheck() {
       ...(Object.keys(later) as Domain[]),
     ]);
     keys.forEach((k) => {
-      const n = now[k] || "geen";
-      const l = later[k] || "geen";
+      const n = (now as any)[k] || "geen";
+      const l = (later as any)[k] || "geen";
       out[k] = LEVEL_SCORE[l] > LEVEL_SCORE[n] ? l : n;
     });
     return out;
   }, [now, later]);
+
+  const profile: VitaProfile = useMemo(
+    () => ({
+      current,
+      funding,
+      moveHorizon,
+      leavingBehind: {
+        tenure: leavingTenure,
+        homeType: leavingType,
+        floor: leavingFloor,
+        region: leavingRegion,
+        approxSize: leavingSize,
+        notes: leavingNotes,
+      },
+      area,
+      type,
+      now,
+      later,
+    }),
+    [
+      current,
+      funding,
+      moveHorizon,
+      leavingTenure,
+      leavingType,
+      leavingFloor,
+      leavingRegion,
+      leavingSize,
+      leavingNotes,
+      area,
+      type,
+      now,
+      later,
+    ]
+  );
 
   const results = useMemo(() => {
     if (!submitted) return [];
@@ -452,20 +266,34 @@ export default function VitaCheck() {
       const res = await fetch("/api/notify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          current,
-          funding,
-          area,
-          type,
-          now,
-          later,
-        }),
+        body: JSON.stringify({ email, profile }),
       });
 
       if (!res.ok) {
         const t = await res.text();
         throw new Error(t || "Fout bij opslaan");
+      }
+
+      setNotifyDone(true);
+    } catch (e: any) {
+      setNotifyError(e?.message || "Er ging iets mis");
+    }
+  }
+
+  async function joinWaitlist(listingId: string) {
+    setNotifyDone(false);
+    setNotifyError(null);
+
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, listingId, profile }),
+      });
+
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(t || "Fout bij inschrijven");
       }
 
       setNotifyDone(true);
@@ -480,7 +308,7 @@ export default function VitaCheck() {
         <h1>VitaCheck</h1>
         <p className="muted" style={{ maxWidth: 900 }}>
           Geef aan wat u <strong>nu</strong> heeft en wat u <strong>later</strong> wilt kunnen organiseren.
-          Wonen en welzijn blijven centraal. Hulp, ondersteuning en zorg zijn beschikbaar wanneer dat nodig is.
+          U ziet direct het aanbod dat hierbij past — en u kunt zich per complex inschrijven (wachtlijst).
         </p>
 
         <div className="card" style={{ marginTop: 14 }}>
@@ -517,10 +345,21 @@ export default function VitaCheck() {
                 <p className="muted" style={{ marginTop: 8, lineHeight: 1.6 }}>
                   {fundingText(funding)}
                 </p>
-                <div style={{ fontSize: 12, color: "#666" }}>
-                  NB: dit is informatief; regels verschillen per gemeente en situatie.
-                </div>
+                <div style={{ fontSize: 12, color: "#666" }}>NB: informatief; regels verschillen per gemeente en situatie.</div>
               </div>
+
+              <div style={{ marginTop: 12, fontSize: 13, color: "#666" }}>Wanneer wilt u verhuizen?</div>
+              <select
+                value={moveHorizon}
+                onChange={(e) => setMoveHorizon(e.target.value as any)}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 12, border: "1px solid #ddd" }}
+              >
+                <option value="orientatie">{moveHorizonLabel("orientatie")}</option>
+                <option value="0_3">{moveHorizonLabel("0_3")}</option>
+                <option value="3_12">{moveHorizonLabel("3_12")}</option>
+                <option value="12_24">{moveHorizonLabel("12_24")}</option>
+                <option value="24_plus">{moveHorizonLabel("24_plus")}</option>
+              </select>
 
               <button
                 onClick={applySuggestedDefaults}
@@ -536,14 +375,74 @@ export default function VitaCheck() {
               >
                 Gebruik slimme startinstellingen
               </button>
-
-              <div style={{ marginTop: 10, fontSize: 12, color: "#666", lineHeight: 1.5 }}>
-                Tip: dit zet logische keuzes klaar. U kunt alles aanpassen.
-              </div>
             </div>
 
             <div>
-              <div style={{ fontSize: 13, color: "#666" }}>Plaats/regio</div>
+              <div style={{ fontSize: 13, color: "#666" }}>Wat laat u achter? (helpt bij matching)</div>
+
+              <div style={{ display: "grid", gap: 10, marginTop: 8 }}>
+                <select
+                  value={leavingTenure}
+                  onChange={(e) => setLeavingTenure(e.target.value as any)}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 12, border: "1px solid #ddd" }}
+                >
+                  <option value="onbekend">Huidige situatie: onbekend</option>
+                  <option value="huur">Ik laat een huurwoning achter</option>
+                  <option value="koop">Ik laat een koopwoning achter</option>
+                </select>
+
+                <select
+                  value={leavingType}
+                  onChange={(e) => setLeavingType(e.target.value as any)}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 12, border: "1px solid #ddd" }}
+                >
+                  <option value="onbekend">Type woning: onbekend</option>
+                  <option value="appartement">Appartement</option>
+                  <option value="eengezins">Eengezinswoning</option>
+                  <option value="seniorenwoning">Seniorenwoning</option>
+                  <option value="overig">Overig</option>
+                </select>
+
+                <select
+                  value={leavingFloor}
+                  onChange={(e) => setLeavingFloor(e.target.value as any)}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 12, border: "1px solid #ddd" }}
+                >
+                  <option value="onbekend">Verdieping/toegankelijkheid: onbekend</option>
+                  <option value="begane_grond">Begane grond / gelijkvloers</option>
+                  <option value="verdieping_met_lift">Verdieping mét lift</option>
+                  <option value="verdieping_zonder_lift">Verdieping zónder lift</option>
+                </select>
+
+                <select
+                  value={leavingSize}
+                  onChange={(e) => setLeavingSize(e.target.value as any)}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 12, border: "1px solid #ddd" }}
+                >
+                  <option value="onbekend">Woonoppervlak: onbekend</option>
+                  <option value="klein">Klein</option>
+                  <option value="middel">Middel</option>
+                  <option value="groot">Groot</option>
+                </select>
+
+                <input
+                  value={leavingRegion}
+                  onChange={(e) => setLeavingRegion(e.target.value)}
+                  placeholder="Plaats/regio van huidige woning (optioneel)"
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 12, border: "1px solid #ddd" }}
+                />
+
+                <textarea
+                  value={leavingNotes}
+                  onChange={(e) => setLeavingNotes(e.target.value)}
+                  placeholder="Wat is belangrijk aan uw huidige woning? (optioneel)"
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 12, border: "1px solid #ddd", minHeight: 90 }}
+                />
+              </div>
+
+              <hr style={{ margin: "14px 0" }} />
+
+              <div style={{ fontSize: 13, color: "#666" }}>Plaats/regio waar u zoekt</div>
               <input
                 value={area}
                 onChange={(e) => setArea(e.target.value)}
@@ -564,22 +463,15 @@ export default function VitaCheck() {
                 <option value="Concept">Concept</option>
               </select>
 
-              <div className="card" style={{ marginTop: 16 }}>
-                <strong>Definities (kort)</strong>
-                <ul style={{ lineHeight: 1.8, marginTop: 10 }}>
-                  <li>
-                    <strong>Welzijn & community</strong>: ontmoeting, activiteiten, omkijken, veiligheid.
-                  </li>
-                  <li>
-                    <strong>Hulp</strong>: praktisch (huishouden, maaltijden, vervoer).
-                  </li>
-                  <li>
-                    <strong>Ondersteuning</strong>: begeleiding, structuur, reablement/fit blijven.
-                  </li>
-                  <li>
-                    <strong>Zorg</strong>: persoonlijke verzorging/verpleging, eventueel met indicatie.
-                  </li>
-                </ul>
+              <div className="card" style={{ marginTop: 14, background: "#fafafa" }}>
+                <strong>Hulp nodig bij documenten & inschrijving?</strong>
+                <p className="muted" style={{ marginTop: 8, lineHeight: 1.6 }}>
+                  Wij kunnen u helpen met een documenten-check, inschrijfhulp en voorbereiding op verhuizing.
+                </p>
+                <div className="btnRow" style={{ marginTop: 10 }}>
+                  <a className="btn btnPrimary" href="/vita-advies">Vita Advies →</a>
+                  <a className="btn btnGhost" href="/documenten">Documenten op orde</a>
+                </div>
               </div>
             </div>
           </div>
@@ -589,10 +481,7 @@ export default function VitaCheck() {
           <div style={{ display: "grid", gap: 14, gridTemplateColumns: "1fr 1fr" }}>
             <div>
               <h2 style={{ margin: 0, fontSize: 18 }}>Wat heeft u nu?</h2>
-              <p className="muted" style={{ marginTop: 6 }}>
-                Kies per onderwerp het niveau dat nu speelt.
-              </p>
-
+              <p className="muted" style={{ marginTop: 6 }}>Kies per onderwerp het niveau dat nu speelt.</p>
               {DOMAIN_GROUPS.map((g) => (
                 <DomainBlock
                   key={g.title}
@@ -608,10 +497,7 @@ export default function VitaCheck() {
 
             <div>
               <h2 style={{ margin: 0, fontSize: 18 }}>Wat wilt u later kunnen organiseren?</h2>
-              <p className="muted" style={{ marginTop: 6 }}>
-                Dit is de “zekerheid voor later” — zonder dat het nu al moet.
-              </p>
-
+              <p className="muted" style={{ marginTop: 6 }}>Zekerheid voor later — zonder dat het nu al moet.</p>
               {DOMAIN_GROUPS.map((g) => (
                 <DomainBlock
                   key={g.title}
@@ -638,7 +524,6 @@ export default function VitaCheck() {
             >
               Toon actueel aanbod
             </button>
-
             <a className="btn btnGhost" href={focusUrl()}>
               Bekijk op kaart →
             </a>
@@ -654,15 +539,24 @@ export default function VitaCheck() {
               </a>
             </div>
 
+            {/* Email veld voor inschrijving / notify */}
+            <div className="card" style={{ marginTop: 12, background: "#fafafa" }}>
+              <strong>Uw e-mail</strong>
+              <p className="muted" style={{ marginTop: 8 }}>
+                Nodig om u in te schrijven (wachtlijst) of u op de hoogte te houden.
+              </p>
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="E-mailadres"
+                style={{ padding: "10px 12px", borderRadius: 12, border: "1px solid #ddd", minWidth: 260, width: "100%" }}
+              />
+            </div>
+
             {results.length > 0 && results[0].score > 0 ? (
               <div style={{ display: "grid", gap: 14, marginTop: 14 }}>
                 {results.slice(0, 8).map(({ listing, score, penalties }) => (
-                  <a
-                    key={listing.id}
-                    href={`/woningen/${encodeURIComponent(listing.id)}`}
-                    className="card"
-                    style={{ textDecoration: "none", color: "inherit" }}
-                  >
+                  <div key={listing.id} className="card">
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                       <div>
                         <div style={{ fontSize: 13, color: "#666" }}>
@@ -683,12 +577,26 @@ export default function VitaCheck() {
                       <strong>Waarom dit past:</strong> {explainWhy(listing, wantsCombined)}
                     </div>
 
-                    <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                      <a href={`/woningen/kaart?focus=${encodeURIComponent(listing.id)}`} style={{ textDecoration: "underline" }}>
-                        Toon op kaart →
-                      </a>
+                    <div className="btnRow" style={{ marginTop: 12 }}>
+                      <a className="btn btnGhost" href={`/woningen/${encodeURIComponent(listing.id)}`}>Bekijk woning</a>
+                      <a className="btn btnGhost" href={`/woningen/kaart?focus=${encodeURIComponent(listing.id)}`}>Toon op kaart</a>
+                      <button
+                        className="btn btnPrimary"
+                        style={{ cursor: email.includes("@") ? "pointer" : "not-allowed", opacity: email.includes("@") ? 1 : 0.6 }}
+                        disabled={!email.includes("@")}
+                        onClick={() => joinWaitlist(listing.id)}
+                        title="Schrijf in (demo)"
+                      >
+                        Schrijf in / wachtlijst
+                      </button>
                     </div>
-                  </a>
+
+                    <div style={{ marginTop: 10, display: "flex", gap: 12, flexWrap: "wrap" }}>
+                      <a href="/faq" style={{ textDecoration: "underline" }}>FAQ</a>
+                      <a href="/documenten" style={{ textDecoration: "underline" }}>Documenten op orde</a>
+                      <a href="/vita-advies" style={{ textDecoration: "underline" }}>Vita Advies</a>
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -698,29 +606,28 @@ export default function VitaCheck() {
                   Laat uw e-mailadres achter. Dan houden we u op de hoogte zodra er passend aanbod beschikbaar is.
                 </p>
 
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                  <input
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="E-mailadres"
-                    style={{ padding: "10px 12px", borderRadius: 12, border: "1px solid #ddd", minWidth: 260 }}
-                  />
-                  <button
-                    onClick={submitNotify}
-                    disabled={!email.includes("@")}
-                    className="btn btnPrimary"
-                    style={{ cursor: email.includes("@") ? "pointer" : "not-allowed", opacity: email.includes("@") ? 1 : 0.6 }}
-                  >
-                    Houd mij op de hoogte
-                  </button>
-                </div>
+                <button
+                  onClick={submitNotify}
+                  disabled={!email.includes("@")}
+                  className="btn btnPrimary"
+                  style={{ cursor: email.includes("@") ? "pointer" : "not-allowed", opacity: email.includes("@") ? 1 : 0.6 }}
+                >
+                  Houd mij op de hoogte
+                </button>
 
                 {notifyDone && <div style={{ marginTop: 10, fontSize: 13, color: "#0a7" }}>Dank! (demo) We hebben uw verzoek ontvangen.</div>}
                 {notifyError && <div style={{ marginTop: 10, fontSize: 13, color: "#b00" }}>{notifyError}</div>}
+              </div>
+            )}
 
-                <div style={{ marginTop: 10, fontSize: 12, color: "#666" }}>
-                  In productie: koppeling met e-mail tooling + alerts op nieuw aanbod.
-                </div>
+            {notifyDone && (
+              <div className="card" style={{ marginTop: 14, background: "#fafafa" }}>
+                <strong>Volgende stap (demo)</strong>
+                <p className="muted" style={{ marginTop: 8, lineHeight: 1.6 }}>
+                  Na een match start de reis pas echt. In de volgende versie krijgt u toegang tot <strong>Dolce Vita</strong>:
+                  een community om wegwijs te worden in de buurt en contact te leggen.
+                </p>
+                <a href="/dolce-vita" style={{ textDecoration: "underline" }}>Bekijk Dolce Vita →</a>
               </div>
             )}
           </div>
