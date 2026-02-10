@@ -1,5 +1,3 @@
-import "../../styles/globals.css";
-
 export default function Page() {
   return (
     <main style={{ padding: "40px", maxWidth: "900px", margin: "0 auto" }}>
@@ -11,9 +9,7 @@ export default function Page() {
         en zorg beschikbaar wanneer dat later nodig is.
       </h2>
 
-      <p>
-        Demo-omgeving om look &amp; feel en functies te testen met collega’s.
-      </p>
+      <p>Demo-omgeving om look &amp; feel en functies te testen met collega’s.</p>
 
       <ul>
         <li><a href="/woningen">Woningen</a></li>
