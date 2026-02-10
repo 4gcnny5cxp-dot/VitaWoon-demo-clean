@@ -15,6 +15,7 @@ export default function Home() {
       <ul>
         <li><a href="/woningen">Woningen</a></li>
         <li><a href="/vitacheck">VitaCheck</a></li>
+        <li><a href="/dolce-vita">Dolce Vita</a>/li>
         <li><a href="/voor-aanbieders">Voor aanbieders</a></li>
         <li><a href="/vitadomus">VitaDomus</a></li>
       </ul>
