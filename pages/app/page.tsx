@@ -1,24 +1,45 @@
-export default function Home() {
+import "../styles/globals.css";
+import type { AppProps } from "next/app";
+
+export default function App({ Component, pageProps }: AppProps) {
   return (
-    <main style={{ padding: "40px", maxWidth: "900px", margin: "0 auto" }}>
-      <h1>VitaWoon</h1>
+    <>
+      <header
+        style={{
+          borderBottom: "1px solid #eee",
+          padding: "14px 20px",
+          position: "sticky",
+          top: 0,
+          background: "#fff",
+          zIndex: 10,
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1100,
+            margin: "0 auto",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+            flexWrap: "wrap",
+          }}
+        >
+          <a href="/" style={{ fontWeight: 900, textDecoration: "none", color: "#111" }}>
+            VitaWoon
+          </a>
 
-      <h2>
-        Ontdek woningen waar u nu prettig woont —<br />
-        met voorzieningen, hulp en zorg beschikbaar wanneer dat later nodig is.
-      </h2>
+          <nav style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+            <a href="/woningen">Woningen</a>
+            <a href="/vitacheck">VitaCheck</a>
+            <a href="/dolce-vita">Dolce Vita</a>
+            <a href="/voor-aanbieders">Voor aanbieders</a>
+            <a href="/vita-advies">Vita Advies</a>
+          </nav>
+        </div>
+      </header>
 
-      <p>
-        Demo-omgeving om look & feel en functies te testen met collega’s.
-      </p>
-
-      <ul>
-        <li><a href="/woningen">Woningen</a></li>
-        <li><a href="/vitacheck">VitaCheck</a></li>
-        <li><a href="/dolce-vita">Dolce Vita</a></li>
-        <li><a href="/voor-aanbieders">Voor aanbieders</a></li>
-        <li><a href="/vitadomus">VitaDomus</a></li>
-      </ul>
-    </main>
+      <Component {...pageProps} />
+    </>
   );
 }
