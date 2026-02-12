@@ -539,6 +539,32 @@ export default function VitaCheck() {
               </a>
             </div>
 
+<div className="card" style={{ marginTop: 12 }}>
+  <strong>Uw VitaProfiel in het kort</strong>
+  <p className="muted" style={{ marginTop: 8, lineHeight: 1.7 }}>
+    Op basis van uw antwoorden lijkt vooral belangrijk: comfortabel wonen nu, met voorzieningen en ondersteuning binnen bereik,
+    en de mogelijkheid om hulp of zorg later te organiseren als dat nodig wordt.
+  </p>
+
+  <div style={{ display: "grid", gap: 10, gridTemplateColumns: "1fr 1fr" }}>
+    <div style={{ border: "1px solid #eee", borderRadius: 14, padding: 12 }}>
+      <div style={{ fontSize: 12, color: "#666" }}>Termijn</div>
+      <div style={{ fontWeight: 800, marginTop: 4 }}>Uw gekozen verhuisperiode</div>
+      <div className="muted" style={{ marginTop: 6, fontSize: 13 }}>
+        We tonen zowel actueel aanbod als (waar relevant) opties voor later, zoals nieuwbouw of concepten.
+      </div>
+    </div>
+
+    <div style={{ border: "1px solid #eee", borderRadius: 14, padding: 12 }}>
+      <div style={{ fontSize: 12, color: "#666" }}>Focus</div>
+      <div style={{ fontWeight: 800, marginTop: 4 }}>Wonen & welzijn eerst</div>
+      <div className="muted" style={{ marginTop: 6, fontSize: 13 }}>
+        Hulp, ondersteuning en zorg blijven optioneel: u houdt de regie.
+      </div>
+    </div>
+  </div>
+</div>
+            
             {/* Email veld voor inschrijving / notify */}
             <div className="card" style={{ marginTop: 12, background: "#fafafa" }}>
               <strong>Uw e-mail</strong>
@@ -553,6 +579,14 @@ export default function VitaCheck() {
               />
             </div>
 
+<div className="card" style={{ marginTop: 12, background: "#fafafa" }}>
+  <strong>U kunt vrij rondkijken</strong>
+  <p className="muted" style={{ marginTop: 8, lineHeight: 1.7 }}>
+    U hoeft niets achter te laten om het aanbod te bekijken. Wilt u straks meldingen, wachtlijst-inschrijving of persoonlijke hulp?
+    Dan vragen we pas om uw e-mailadres.
+  </p>
+</div>
+            
 <VidaSupportBlock variant="full" />
             
             {results.length > 0 && results[0].score > 0 ? (
