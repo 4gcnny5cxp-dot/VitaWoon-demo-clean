@@ -1,50 +1,92 @@
 import { useRouter } from "next/router";
 import { LISTINGS } from "../../lib/demoData";
 
+type AnyListing = Record<string, any>;
+
+function pickString(obj: AnyListing, keys: string[], fallback = "Onbekend") {
+  for (const k of keys) {
+    const v = obj?.[k];
+    if (typeof v === "string" && v.trim()) return v;
+  }
+  return fallback;
+}
+
+function pickBool(obj: AnyListing, keys: string[], fallback = false) {
+  for (const k of keys) {
+    const v = obj?.[k];
+    if (typeof v === "boolean") return v;
+  }
+  return fallback;
+}
+
 export default function WoningDetail() {
   const router = useRouter();
   const { id } = router.query;
 
-  const woning = (LISTINGS || []).find((w: any) => String(w.id) === String(id));
+  const woning: AnyListing | undefined = (LISTINGS as AnyListing[]).find(
+    (w) => String(w?.id) === String(id)
+  );
 
   if (!woning) {
     return (
       <main style={{ padding: "40px", maxWidth: "900px", margin: "0 auto" }}>
         <h1>Woning</h1>
         <p style={{ color: "#555" }}>Deze woning is (nog) niet gevonden in de demo-data.</p>
-        <p><a href="/woningen" style={{ textDecoration: "underline" }}>← Terug naar overzicht</a></p>
+        <p>
+          <a href="/woningen" style={{ textDecoration: "underline" }}>
+            ← Terug naar overzicht
+          </a>
+        </p>
       </main>
     );
   }
 
+  const title = pickString(woning, ["title", "naam", "name"], "Woning");
+  const city = pickString(woning, ["city", "plaats", "stad", "location", "gemeente"], "Onbekend");
+  const type = pickString(woning, ["type", "woningtype", "category"], "Appartement");
+  const isNewBuild = pickBool(woning, ["isNewBuild", "nieuwbouw", "newBuild"], false);
+
+  const careLevel = pickString(woning, ["careLevel", "zorgniveau", "supportLevel"], "—");
+  const description = pickString(
+    woning,
+    ["description", "omschrijving", "summary"],
+    "Demo-omschrijving. Hier komt later een echte omschrijving per complex/woning."
+  );
+
   return (
     <main style={{ padding: "40px", maxWidth: "1000px", margin: "0 auto" }}>
-      <p><a href="/woningen" style={{ textDecoration: "underline" }}>← Terug naar overzicht</a></p>
+      <p>
+        <a href="/woningen" style={{ textDecoration: "underline" }}>
+          ← Terug naar overzicht
+        </a>
+      </p>
 
-      <h1 style={{ marginTop: 10 }}>{woning.title}</h1>
+      <h1 style={{ marginTop: 10 }}>{title}</h1>
       <p style={{ color: "#666", marginTop: 6 }}>
-        {(woning.city || "Onbekend")} • {(woning.type || "Appartement")} • {woning.isNewBuild ? "Nieuwbouw / op termijn" : "Bestaand aanbod"}
+        {city} • {type} • {isNewBuild ? "Nieuwbouw / op termijn" : "Bestaand aanbod"}
       </p>
 
       <div style={card}>
         <strong>Over deze woning</strong>
-        <p style={{ ...muted, marginTop: 8 }}>
-          {woning.description || "Demo-omschrijving. Hier komt later een echte omschrijving per complex/woning."}
-        </p>
+        <p style={{ ...muted, marginTop: 8 }}>{description}</p>
 
         <div style={{ display: "grid", gap: 10, gridTemplateColumns: "1fr 1fr 1fr", marginTop: 12 }}>
-          <Fact label="Type" value={woning.type || "—"} />
-          <Fact label="Plaats" value={woning.city || "—"} />
-          <Fact label="Zorg/ondersteuning" value={woning.careLevel || "—"} />
+          <Fact label="Type" value={type} />
+          <Fact label="Plaats" value={city} />
+          <Fact label="Hulp/ondersteuning" value={careLevel} />
         </div>
 
         <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <a style={primaryLinkBtn} href="/vitacheck">Doe VitaCheck</a>
-          <a style={ghostLinkBtn} href="#inschrijven">Inschrijven (demo)</a>
+          <a style={primaryLinkBtn} href="/vitacheck">
+            Doe VitaCheck
+          </a>
+          <a style={ghostLinkBtn} href="#inschrijven">
+            Inschrijven (demo)
+          </a>
         </div>
       </div>
 
-      {/* ✅ VIDA BLOK OP DETAIL (Gegarandeerd zichtbaar) */}
+      {/* ✅ VIDA BLOK OP DETAIL */}
       <VidaOnDetail />
 
       <div id="inschrijven" style={card}>
@@ -68,13 +110,19 @@ function VidaOnDetail() {
     <div style={{ ...card, background: "#fafafa" }}>
       <strong>Vragen over deze woning?</strong>
       <p style={{ ...muted, marginTop: 8 }}>
-        Vida denkt graag met u mee — ook als u nog twijfelt of dit de juiste stap is.
+        Vida denkt graag met u mee — digitaal voor snelle vragen, en persoonlijk als u liever even belt.
       </p>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
-        <a style={ghostLinkBtn} href="/vida">💬 Snelle vraag</a>
-        <a style={ghostLinkBtn} href="/vida#meekijken">📩 Laat Vida meekijken</a>
-        <a style={primaryLinkBtn} href="/vida#bellen">📞 Plan een belmoment</a>
+        <a style={ghostLinkBtn} href="/vida">
+          💬 Snelle vraag
+        </a>
+        <a style={ghostLinkBtn} href="/vida#meekijken">
+          📩 Laat Vida meekijken
+        </a>
+        <a style={primaryLinkBtn} href="/vida#bellen">
+          📞 Plan een belmoment
+        </a>
       </div>
 
       <div style={{ marginTop: 10, fontSize: 12, color: "#666" }}>
