@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { LISTINGS } from "../../lib/demoData";
 
 type Horizon = "nu" | "3-12m" | "1-2j" | "2-5j" | "orientatie";
@@ -146,12 +147,41 @@ function VidaSupportBlock() {
   );
 }
 
+import type { Dispatch, SetStateAction } from "react";
+
+// ...
+
 function SelectBlock<T extends string>(props: {
   title: string;
   value: T;
-  onChange: (v: T) => void;
-  options: [T, string][];
+  onChange: Dispatch<SetStateAction<T>>;
+  options: readonly [T, string][];
 }) {
+  const { title, value, onChange, options } = props;
+
+  return (
+    <div>
+      <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 6 }}>{title}</div>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as T)}
+        style={{
+          width: "100%",
+          padding: "10px 12px",
+          borderRadius: 12,
+          border: "1px solid #ddd",
+          background: "#fff",
+        }}
+      >
+        {options.map(([v, label]) => (
+          <option key={v} value={v}>
+            {label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
   const { title, value, onChange, options } = props;
 
   return (
