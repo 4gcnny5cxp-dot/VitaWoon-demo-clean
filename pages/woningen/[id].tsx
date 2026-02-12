@@ -111,6 +111,8 @@ const LISTINGS: Listing[] = [
   }
 ];
 
+<VidaOnDetail />
+
 function groupScore(listing: Listing, keys: Domain[]) {
   const best = Math.max(...keys.map((k) => LEVEL_SCORE[listing.capabilities[k] || "geen"]));
   return best; // 0..3
@@ -227,6 +229,33 @@ function BadgeRow({ title, score }: { title: string; score: number }) {
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
         <span style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" }}>{dots(score)}</span>
         <span className="pill">{labelFor(score)}</span>
+      </div>
+    </div>
+  );
+}
+
+function VidaOnDetail() {
+  return (
+    <div className="card" style={{ marginTop: 14, background: "#fafafa" }}>
+      <strong>Vragen over deze woning?</strong>
+      <p className="muted" style={{ marginTop: 8, lineHeight: 1.6 }}>
+        Vida denkt graag met u mee — ook als u nog twijfelt of dit de juiste stap is.
+      </p>
+
+      <div className="btnRow" style={{ marginTop: 10 }}>
+        <a className="btn btnGhost" href="/vida">
+          💬 Stel een snelle vraag
+        </a>
+        <a className="btn btnGhost" href="/vida#meekijken">
+          📩 Laat Vida met u meekijken
+        </a>
+        <a className="btn btnPrimary" href="/vida#bellen">
+          📞 Plan een belmoment
+        </a>
+      </div>
+
+      <div style={{ marginTop: 10, fontSize: 12, color: "#666" }}>
+        VitaWoon werkt samen met aanbieders om dit aanbod zichtbaar te maken. Het Vida-team denkt onafhankelijk met u mee.
       </div>
     </div>
   );
