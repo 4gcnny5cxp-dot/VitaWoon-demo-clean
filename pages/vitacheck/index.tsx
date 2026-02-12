@@ -553,6 +553,8 @@ export default function VitaCheck() {
               />
             </div>
 
+<VidaSupportBlock variant="full" />
+            
             {results.length > 0 && results[0].score > 0 ? (
               <div style={{ display: "grid", gap: 14, marginTop: 14 }}>
                 {results.slice(0, 8).map(({ listing, score, penalties }) => (
@@ -642,6 +644,43 @@ export default function VitaCheck() {
     </main>
   );
 }
+
+function VidaSupportBlock(props: { variant?: "compact" | "full" }) {
+  const variant = props.variant || "full";
+
+  return (
+    <div className="card" style={{ marginTop: 14, background: "#fafafa" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+        <div>
+          <strong>Twijfelt u nog?</strong>
+          <div className="muted" style={{ marginTop: 6, lineHeight: 1.6, maxWidth: 820 }}>
+            Het Vida-team kijkt graag onafhankelijk met u mee naar wat bij uw situatie past.
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <a className="btn btnGhost" href="/vida">
+            💬 Stel een snelle vraag
+          </a>
+          <a className="btn btnGhost" href="/vida#meekijken">
+            📩 Laat ons meekijken
+          </a>
+          <a className="btn btnPrimary" href="/vida#bellen">
+            📞 Plan een belmoment
+          </a>
+        </div>
+      </div>
+
+      {variant === "full" && (
+        <div style={{ marginTop: 10, fontSize: 12, color: "#666" }}>
+          VitaWoon werkt samen met verschillende aanbieders om aanbod zichtbaar te maken. Het Vida-team denkt onafhankelijk met u mee.
+        </div>
+      )}
+    </div>
+  );
+}
+
+<VidaSupportBlock variant="compact" />
 
 function DomainBlock(props: {
   title: string;
